@@ -1,5 +1,5 @@
-# postgres-database-container
-React(Typescript) + Express(Typescript) + PostgreSQL with Docker
+# PostgresSQL Database Container
+PostgreSQL with Docker
 
 # Dependencias 
 
