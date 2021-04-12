@@ -1,4 +1,4 @@
-# PostgresSQL Database Container
+# PostgreSQL Database Container
 PostgreSQL with Docker
 
 # Dependencias 
