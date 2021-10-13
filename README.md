@@ -20,15 +20,6 @@ Editar el contenido de env
 $ nano .env
 ```
 
-Opcional: Cambiar puerto del host y/o nombre del contenedor
-
-```bash
-$ nano docker-compose.yml
-$ # En la seccion container_name puede se puede cambiar el nombre del contenedor
-$ # En la seccion ports se puede cambiar el puerto del host:
-$ # 	PUERTO_HOST:5432
-```
-
 Iniciar los contenedores para producción (logs ocultos)
 
 ```bash
@@ -72,10 +63,10 @@ Toda la base de datos queda guardada en **/database/data**
 
 Para conectarse a una terminal del contenedor (sólo para debug)
 
-**NOMBRE_CONTENEDOR**: está en el archivo _docker-compose linea_ **container_name**
+**CONTAINER_NAME**: está en el archivo _.env_
 
 ```bash
-$ docker container exec -it NOMBRE_CONTENEDOR bash
+$ docker container exec -it CONTAINER_NAME bash
 ```
 
 ## Backups
@@ -87,14 +78,14 @@ Se creó un volumen para guardar los **backups**
 Para hacer el backup tenemos que entrar a una shell del contenedor y generar el archivo de backup en la carpeta donde esta montado el volumen.
 Usar los datos configurados previamente en .env
 
-**NOMBRE_CONTENEDOR**: está en el archivo _docker-compose linea_ **container_name**
+**CONTAINER_NAME**: está en el archivo _.env_
 
 **POSTGRES_USER**: está en el archivo _.env_
 
 **POSTGRES_DB**: está en el archivo _.env_
 
 ```bash
-$ docker container exec -it NOMBRE_CONTENEDOR bash
+$ docker container exec -it CONTAINER_NAME bash
 root# pg_dump -U POSTGRES_USER POSTGRES_DB > backups/${POSTGRES_DB}$(date "+%Y%m%d-%H:%M").sql
 root# exit
 ```
@@ -107,7 +98,7 @@ Para restaurar el backup tenemos que entrar a una shell del contenedor y restaur
 3° Eliminar la carpeta database que tiene la base de datos actual
 4° Volver a iniciar el contenedor
 
-**NOMBRE_CONTENEDOR**: está en el archivo _docker-compose linea_ **container_name**
+**CONTAINER_NAME**: está en el archivo _.env_
 
 **POSTGRES_USER**: está en el archivo _.env_
 
@@ -117,7 +108,7 @@ Para restaurar el backup tenemos que entrar a una shell del contenedor y restaur
 $ docker-compose down
 $ sudo rm -r database
 $ docker-compose up -d
-$ docker container exec -it NOMBRE_CONTENEDOR bash
+$ docker container exec -it CONTAINER_NAME bash
 root# cd backups
 root# psql -U POSTGRES_USER
 usuario_postgres=# \conninfo
