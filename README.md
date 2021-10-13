@@ -95,7 +95,7 @@ Usar los datos configurados previamente en .env
 
 ```bash
 $ docker container exec -it NOMBRE_CONTENEDOR bash
-root# pg_dump -U POSTGRES_USER POSTGRES_DB > backups/$(date "+%Y%m%d-%H:%M").sql
+root# pg_dump -U POSTGRES_USER POSTGRES_DB > backups/${POSTGRES_DB}$(date "+%Y%m%d-%H:%M").sql
 root# exit
 ```
 
