@@ -88,7 +88,9 @@ Para hacer el backup tenemos que entrar a una shell del contenedor y generar el 
 Usar los datos configurados previamente en .env
 
 **NOMBRE_CONTENEDOR**: está en el archivo _docker-compose linea_ **container_name**
+
 **POSTGRES_USER**: está en el archivo _.env_
+
 **POSTGRES_DB**: está en el archivo _.env_
 
 ```bash
@@ -106,7 +108,9 @@ Para restaurar el backup tenemos que entrar a una shell del contenedor y restaur
 4° Volver a iniciar el contenedor
 
 **NOMBRE_CONTENEDOR**: está en el archivo _docker-compose linea_ **container_name**
+
 **POSTGRES_USER**: está en el archivo _.env_
+
 **NOMBRE_DEL_BACKUP**: archivo ubicado en _backups_
 
 ```bash
