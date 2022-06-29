@@ -41,7 +41,7 @@ $ docker container exec -it CONTAINER_NAME bash
 
 ## Backups
 
-Se creó un volumen para guardar los **backups**
+Se creó un volumen para guardar los _backups_ en **/backups**.
 
 ### Realizar backup
 
