@@ -31,12 +31,16 @@ $ docker compose down
 
 Toda la base de datos queda guardada en **/database/data**
 
-Para conectarse a una terminal del contenedor (sólo para debug)
+Para conectarse a una terminal del contenedor (sólo para debug).
+Usar los datos configurados previamente en **.env**.
 
-**CONTAINER_NAME**: está en el archivo _.env_
+**POSTGRES_USER**: está en el archivo _.env_
+
+**POSTGRES_DB**: está en el archivo _.env_
 
 ```bash
-$ docker container exec -it CONTAINER_NAME bash
+$ docker compose exec -it prod bash
+root@container:$ psql -U ${POSTGRES_USER} ${POSTGRES_DB}
 ```
 
 ## Backups
@@ -48,10 +52,12 @@ Se creó un volumen para guardar los _backups_ en **/backups**.
 Para hacer el backup tenemos que entrar a una shell del contenedor y generar el archivo de backup en la carpeta donde esta montado el volumen.
 Usar los datos configurados previamente en .env
 
-**CONTAINER_NAME**: está en el archivo _.env_
+**POSTGRES_USER**: está en el archivo _.env_
+
+**POSTGRES_DB**: está en el archivo _.env_
 
 ```bash
-$ docker container exec -it CONTAINER_NAME bash
+$ docker compose exec -it prod bash
 root@container:$ pg_dump -U ${POSTGRES_USER} ${POSTGRES_DB} > backups/${POSTGRES_DB}$(date "+%Y%m%d-%H_%M").sql
 root@container:$ exit
 ```
@@ -68,7 +74,7 @@ Para restaurar el backup tenemos que entrar a una shell del contenedor y restaur
 $ cd backups
 $ sudo unzip NOMBRE_BACKUP.zip
 $ cd ..
-$ docker container exec -it CONTAINER_NAME bash
+$ docker compose exec -it prod bash
 root@container:$ psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -f backups/NOMBRE_BACKUP.sql
 root@container:$ exit
 ```
