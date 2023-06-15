@@ -1,16 +1,19 @@
 version: "3.8"
 name: postgres_db
 services:
-  prod:
-    container_name: ${CONTAINER_NAME}
-    image: ${CONTAINER_NAME}:1.0.0
+  postgres_db:
+    container_name: postgres_db
+    image: postgres_db:1.0.0
     build:
       context: .
-      target: production
+      target: base
       dockerfile: ./Dockerfile
     env_file: .env
     environment:
       - TZ=America/Argentina/Buenos_Aires
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
     restart: always
     ports:
       - ${DB_PORT}:5432

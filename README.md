@@ -14,7 +14,7 @@ $ nano .env
 ## Iniciar
 
 ```bash
-$ docker compose up -d prod
+$ docker compose up -d
 ```
 
 _Quitando la opción *-d* se ven los logs del contenedor._
@@ -34,13 +34,13 @@ Toda la base de datos queda guardada en **/database/data**
 Para conectarse a una terminal del contenedor (sólo para debug).
 Usar los datos configurados previamente en **.env**.
 
-**POSTGRES_USER**: está en el archivo _.env_
+**DB_USER**: está en el archivo _.env_
 
-**POSTGRES_DB**: está en el archivo _.env_
+**DB_NAME**: está en el archivo _.env_
 
 ```bash
-$ docker compose exec -it prod bash
-root@container:$ psql -U ${POSTGRES_USER} ${POSTGRES_DB}
+$ docker compose exec -it postgres_db bash
+root@container:$ psql -U ${DB_USER} ${DB_NAME}
 ```
 
 ## Backups
@@ -52,13 +52,13 @@ Se creó un volumen para guardar los _backups_ en **/backups**.
 Para hacer el backup tenemos que entrar a una shell del contenedor y generar el archivo de backup en la carpeta donde esta montado el volumen.
 Usar los datos configurados previamente en .env
 
-**POSTGRES_USER**: está en el archivo _.env_
+**DB_USER**: está en el archivo _.env_
 
-**POSTGRES_DB**: está en el archivo _.env_
+**DB_NAME**: está en el archivo _.env_
 
 ```bash
-$ docker compose exec -it prod bash
-root@container:$ pg_dump -U ${POSTGRES_USER} ${POSTGRES_DB} > backups/${POSTGRES_DB}$(date "+%Y%m%d-%H_%M").sql
+$ docker compose exec -it postgres_db bash
+root@container:$ pg_dump -U ${DB_USER} ${DB_NAME} > backups/${DB_NAME}$(date "+%Y%m%d-%H_%M").sql
 root@container:$ exit
 ```
 
@@ -68,14 +68,12 @@ Para restaurar el backup tenemos que entrar a una shell del contenedor y restaur
 
 1. Hay que asegurarse de tener el backup en la carpeta **/backups**.
 
-**CONTAINER_NAME**: está en el archivo _.env_
-
 ```bash
 $ cd backups
 $ sudo unzip NOMBRE_BACKUP.zip
 $ cd ..
-$ docker compose exec -it prod bash
-root@container:$ psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -f backups/NOMBRE_BACKUP.sql
+$ docker compose exec -it postgres_db bash
+root@container:$ psql -U ${DB_USER} -d ${DB_NAME} -f backups/NOMBRE_BACKUP.sql
 root@container:$ exit
 ```
 
@@ -137,5 +135,4 @@ $  echo \
 
 $ sudo apt-get update
 $ sudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin
-
 ```
