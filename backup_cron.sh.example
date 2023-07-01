@@ -30,7 +30,7 @@ if [ $? -ne 0 ]; then
     echo [`date`] "STATUS: ERROR" >> $LOG_DIR
     echo [`date`] "STATUS: BACKUP INCOMPLETO" >> $LOG_DIR
     echo ------------------------------------ >> $LOG_DIR
-    exit $?
+    exit 1
 fi
 echo [`date`] "STATUS: OK" >> $LOG_DIR
 
@@ -40,7 +40,8 @@ zip -r ${DB_NAME}${FECHA}.zip ${DB_NAME}${FECHA}.sql
 if [ $? -ne 0 ]; then 
     echo [`date`] "STATUS: ERROR" >> $LOG_DIR
     echo [`date`] "STATUS: BACKUP INCOMPLETO" >> $LOG_DIR
-    exit $?
+    echo ------------------------------------ >> $LOG_DIR
+    exit 2
 fi
 cd ${WORKDIR}
 echo [`date`] "STATUS: OK" >> $LOG_DIR
@@ -50,7 +51,8 @@ scp -P ${SSH_DEST_PORT} backups/${DB_NAME}${FECHA}.zip ${SSH_DEST_USER}@${SSH_DE
 if [ $? -ne 0 ]; then 
     echo [`date`] "STATUS: ERROR" >> $LOG_DIR
     echo [`date`] "STATUS: BACKUP INCOMPLETO" >> $LOG_DIR
-    exit $?
+    echo ------------------------------------ >> $LOG_DIR
+    exit 3
 fi
 echo [`date`] "STATUS: OK" >> $LOG_DIR
 
