@@ -84,15 +84,23 @@ root@container:$ exit
 En el servidor de destino tiene que estar configurado ssh para aceptar autenticación con Public Keys.
 
 ```bash
-$ # En el servidor de destino
+$ #------------------------------------------------------------------------------
+$ # ¡¡¡En el servidor de destino!!!
+$ # Preparar un usuario y ruta de backups
+$ useradd -m backup_user -s /bin/bash
+$ passwd backup_user
+$ # Tendremos un usuario backup_user para realizar los backups
+$ #   y un dir /home/backup_user para guardarlos
+$
+$ # Configurar autenticación de sshd
 $ sudo nano /etc/ssh/sshd_config
 $ # Descomentar la linea que tiene: PubkeyAuthentication yes
 $ sudo systemctl restart sshd.service
 $ #------------------------------------------------------------------------------
-$ # En el servidor de origen del backup (USUARIO ROOT)
+$ # ¡¡¡En el servidor de origen del backup (USUARIO ROOT)!!!
 root$ # Generar las claves del usuario que va a ejecutar el script en este equipo
 root$ ssh-keygen
-root$ ssh-copy-id USUARIO@SERVIDOR_DESTINO
+root$ ssh-copy-id backup_user@SERVIDOR_DESTINO
 ```
 
 ### Programar tarea
