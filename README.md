@@ -108,6 +108,7 @@ root$ ssh-copy-id backup_user@SERVIDOR_DESTINO
 ```bash
 $ # En el servidor de origen del backup
 $ cp backup_cron.sh.example backup_cron.sh
+$ chmod +x backup_cron.sh
 $ # Configurar el destino. Editar la linea #DEST=usuaro@host:/path
 $ nano backup_cron.sh
 $ # Programar la tarea con cron (USUARIO ROOT)

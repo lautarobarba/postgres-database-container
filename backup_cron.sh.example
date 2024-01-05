@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 
 #========== CONFIG ==========
-#Variables de entorno (LAS MISMAS INGRESADAS EN .env)
-DB_USER=demo_db
+#LA MISMA INGRESADA EN .env
 DB_NAME=demo_db
 
 #Ruta de destino backup
