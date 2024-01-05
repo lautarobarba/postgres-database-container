@@ -50,7 +50,7 @@ Se creó un volumen para guardar los _backups_ en **/backups**.
 ### Realizar backup
 
 Para hacer el backup tenemos que entrar a una shell del contenedor y generar el archivo de backup en la carpeta donde esta montado el volumen.
-Usar los datos configurados previamente en .env
+Usar los datos configurados previamente en **.env**.
 
 **DB_USER**: está en el archivo _.env_
 
