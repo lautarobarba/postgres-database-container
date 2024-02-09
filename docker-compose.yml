@@ -28,3 +28,15 @@ services:
       - ./backups:/backups
     extra_hosts:
       - host.docker.internal:host-gateway
+
+  postgres_exporter:
+    container_name: postgres_exporter
+    image: quay.io/prometheuscommunity/postgres-exporter:v0.15.0
+    env_file: .env
+    environment:
+      - DATA_SOURCE_NAME='postgresql://${DB_USER}:${DB_PASSWORD}@postgres_db:5432/postgres?sslmode=disable'
+    restart: always
+    ports:
+      - ${DB_EXPORTER}:9187
+    extra_hosts:
+      - host.docker.internal:host-gateway
