@@ -1,19 +1,12 @@
-version: "3.8"
 name: postgres_db
 services:
   postgres_db:
     container_name: postgres_db
-    image: postgres_db:1.0.0
     build:
       context: .
       target: base
       dockerfile: ./Dockerfile
-    env_file: .env
-    environment:
-      - TZ=America/Argentina/Buenos_Aires
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-      - POSTGRES_DB=${DB_NAME}
+    image: postgres_db:dev
     restart: always
     healthcheck:
       test: pg_isready || exit 1
@@ -21,22 +14,16 @@ services:
       retries: 5
       start_period: 1s
       timeout: 10s
+    env_file: .env
+    environment:
+      - TZ=America/Argentina/Buenos_Aires
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
     ports:
       - ${DB_PORT}:5432
     volumes:
       - ./database/data:/var/lib/postgresql/data
       - ./backups:/backups
-    extra_hosts:
-      - host.docker.internal:host-gateway
-
-  postgres_exporter:
-    container_name: postgres_exporter
-    image: quay.io/prometheuscommunity/postgres-exporter:v0.15.0
-    env_file: .env
-    environment:
-      - DATA_SOURCE_NAME='postgresql://${DB_USER}:${DB_PASSWORD}@postgres_db:5432/postgres?sslmode=disable'
-    restart: always
-    ports:
-      - ${DB_EXPORTER}:9187
     extra_hosts:
       - host.docker.internal:host-gateway
