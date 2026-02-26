@@ -1,147 +1,74 @@
 # PostgreSQL Database Container
 
-## Dependencias
+Contenedor Docker con PostgreSQL listo para usar, con volúmenes persistentes y soporte para backups automáticos.
 
-- Docker (Apéndice)
+## Quick Start
+
+```bash
+# 1. Configurar variables de entorno
+cp .env.example .env
+nano .env
+
+# 2. Iniciar el contenedor
+docker compose up -d
+```
 
 ## Configuración
 
+Edita el archivo `.env` con tus preferencias:
+
+| Variable            | Descripción                | Valor por defecto |
+| ------------------- | -------------------------- | ----------------- |
+| `POSTGRES_DB`       | Nombre de la base de datos | `postgres`        |
+| `POSTGRES_USER`     | Usuario administrador      | `postgres`        |
+| `POSTGRES_PASSWORD` | Contraseña del usuario     | (configurar)      |
+| `POSTGRES_PORT`     | Puerto expuesto            | `5432`            |
+
+## Uso
+
+### Conectar a PostgreSQL
+
 ```bash
-$ cp .env.example .env
-$ nano .env
+docker compose exec -it postgres_db psql -U $POSTGRES_USER -d $POSTGRES_DB
 ```
 
-## Iniciar
+### Ver logs
 
 ```bash
-$ docker compose up -d
+docker compose logs -f postgres_db
 ```
 
-_Quitando la opción *-d* se ven los logs del contenedor._
-
-## Detener
+### Detener
 
 ```bash
-$ # Si estan corriendo con logs visibles
-$ #     detener con Ctr+C
-$ docker compose down
-```
-
-## Database (PostgreSQL)
-
-Toda la base de datos queda guardada en **/database/data**
-
-Para conectarse a una terminal del contenedor (sólo para debug).
-Usar los datos configurados previamente en **.env**.
-
-**DB_USER**: está en el archivo _.env_
-
-**DB_NAME**: está en el archivo _.env_
-
-```bash
-$ docker compose exec -it postgres_db bash
-root@container:$ psql -U ${DB_USER} ${DB_NAME}
+docker compose down
 ```
 
 ## Backups
 
-Se creó un volumen para guardar los _backups_ en **/backups**.
-
-### Realizar backup
-
-Para hacer el backup tenemos que entrar a una shell del contenedor y generar el archivo de backup en la carpeta donde esta montado el volumen.
-Usar los datos configurados previamente en **.env**.
-
-**DB_USER**: está en el archivo _.env_
-
-**DB_NAME**: está en el archivo _.env_
+### Realizar backup manual
 
 ```bash
-$ docker compose exec -it postgres_db bash
-root@container:$ pg_dump -U ${DB_USER} ${DB_NAME} > backups/${DB_NAME}$(date "+%Y%m%d-%H_%M").sql
-root@container:$ exit
+docker compose exec -it postgres_db bash
+pg_dump -U $POSTGRES_USER $POSTGRES_DB > /backups/$POSTGRES_DB$(date "+%Y%m%d-%H_%M").sql
 ```
 
 ### Restaurar backup
 
-Para restaurar el backup tenemos que entrar a una shell del contenedor y restaurar el backup que se encuentra en el volumen montado.
-
-1. Hay que asegurarse de tener el backup en la carpeta **/backups**.
-
 ```bash
-$ cd backups
-$ sudo unzip NOMBRE_BACKUP.zip
-$ cd ..
-$ docker compose exec -it postgres_db bash
-root@container:$ psql -U ${DB_USER} -d ${DB_NAME} -f backups/NOMBRE_BACKUP.sql
-root@container:$ exit
+docker compose exec -i postgres_db psql -U $POSTGRES_USER -d $POSTGRES_DB < backups/archivo_backup.sql
 ```
 
-## Programar backups automáticos (CRON)
+### Backups automáticos (CRON)
 
-### Prerrequisitos
+Ver [backup_cron.sh.example](backup_cron.sh.example) para configurar backups automáticos a un servidor remoto.
 
-En el servidor de destino tiene que estar configurado ssh para aceptar autenticación con Public Keys.
+## Estructura
 
-```bash
-$ #------------------------------------------------------------------------------
-$ # ¡¡¡En el servidor de destino!!!
-$ # Preparar un usuario y ruta de backups
-$ useradd -m backup_user -s /bin/bash
-$ passwd backup_user
-$ # Tendremos un usuario backup_user para realizar los backups
-$ #   y un dir /home/backup_user para guardarlos
-$
-$ # Configurar autenticación de sshd
-$ sudo nano /etc/ssh/sshd_config
-$ # Descomentar la linea que tiene: PubkeyAuthentication yes
-$ sudo systemctl restart sshd.service
-$ #------------------------------------------------------------------------------
-$ # ¡¡¡En el servidor de origen del backup (USUARIO ROOT)!!!
-root$ # Generar las claves del usuario que va a ejecutar el script en este equipo
-root$ ssh-keygen
-root$ ssh-copy-id backup_user@SERVIDOR_DESTINO
 ```
-
-### Programar tarea
-
-```bash
-$ # En el servidor de origen del backup
-$ cp backup_cron.sh.example backup_cron.sh
-$ chmod +x backup_cron.sh
-$ # Configurar el destino. Editar la linea #DEST=usuaro@host:/path
-$ nano backup_cron.sh
-$ # Programar la tarea con cron (USUARIO ROOT)
-root$ crontab -e
-root$ # En cron:
-			# Para probar un backup cada 5 minutos
-			*/5 * * * * bash /ruta_al_script/backup_cron.sh
-
-			# Para dejar el backup 1 vez por dia
-			0 0 * * * bash /ruta_al_script/backup_cron.sh
-```
-
-# Apéndice
-
-## Instalación de docker en ubuntu 18.04/20.04/22.04
-
-Fuente: [Instalación docker ubuntu](https://docs.docker.com/engine/install/ubuntu).
-
-```bash
-$ sudo apt-get update
-$ sudo apt-get install \
-    ca-certificates \
-    curl \
-    gnupg \
-    lsb-release
-
-$ sudo mkdir -p /etc/apt/keyrings
-$ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-
-$  echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-$ sudo apt-get update
-$ sudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin
+.
+├── .env.example      # Plantilla de configuración
+├── docker-compose.yml
+├── backup_cron.sh.example
+└── backups/         # Volumen para backups (se crea automáticamente)
 ```
