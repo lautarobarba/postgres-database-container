@@ -1,0 +1,103 @@
+#!/usr/bin/env bash
+# Backup de bases de datos PostgreSQL a AWS S3 Glacier Deep Archive.
+# Ver BACKUPS.md para la configuración.
+
+#========== CONFIG ==========
+# Bases de datos a respaldar (separadas por espacio)
+DATABASES="mi_proyecto_db otro_proyecto_db"
+
+# Bucket y carpeta (prefijo) de destino en S3
+S3_BUCKET=mi-bucket-de-backups
+S3_PREFIX=postgres/$(hostname)
+
+# Clase de almacenamiento: DEEP_ARCHIVE es la más barata y durable
+S3_STORAGE_CLASS=DEEP_ARCHIVE
+
+# Perfil de credenciales de AWS CLI (ver ~/.aws/credentials)
+AWS_PROFILE=postgres-backup
+
+# Servicio definido en compose.yaml
+SERVICE_NAME=postgres_db
+#======== END CONFIG ========
+
+set -o pipefail
+export PATH=/usr/local/bin:/usr/bin:/bin:${PATH}
+export AWS_PROFILE
+
+SCRIPT_PATH=$(realpath "$0")
+WORKDIR=$(dirname "${SCRIPT_PATH}")
+LOG_FILE=${WORKDIR}/backup.log
+LOCAL_DIR=${WORKDIR}/backups
+FECHA=$(date +%Y%m%d-%H%M)
+
+log() {
+    echo "[$(date)] $*" >>"${LOG_FILE}"
+}
+
+cd "${WORKDIR}" || exit 1
+mkdir -p "${LOCAL_DIR}"
+log "========== Comenzando script Backup (Glacier) - POSTGRESQL =========="
+
+ERRORES=0
+for DB_NAME in ${DATABASES}; do
+    FILE_NAME=${DB_NAME}-${FECHA}.sql.gz
+    FILE=${LOCAL_DIR}/${FILE_NAME}
+    S3_URI=s3://${S3_BUCKET}/${S3_PREFIX}/${DB_NAME}/${FILE_NAME}
+
+    log ">> Volcando ${DB_NAME} a ${FILE}"
+    docker compose exec -T "${SERVICE_NAME}" \
+        pg_dump -U postgres --clean --if-exists "${DB_NAME}" \
+        2>>"${LOG_FILE}" | gzip >"${FILE}"
+    if [ $? -ne 0 ]; then
+        log "STATUS: ERROR al volcar ${DB_NAME}"
+        rm -f "${FILE}"
+        ERRORES=$((ERRORES + 1))
+        continue
+    fi
+    log "STATUS: OK"
+
+    log ">> Subiendo ${FILE} a ${S3_URI} (${S3_STORAGE_CLASS})"
+    if ! aws s3 cp "${FILE}" "${S3_URI}" --storage-class "${S3_STORAGE_CLASS}" --only-show-errors 2>>"${LOG_FILE}"; then
+        log "STATUS: ERROR al subir ${DB_NAME}, el backup queda en ${FILE}"
+        ERRORES=$((ERRORES + 1))
+        continue
+    fi
+    log "STATUS: OK"
+
+    rm -f "${FILE}"
+done
+
+# Usuarios (roles) y sus contraseñas: no están incluidos en los backups de cada base.
+# Se excluye el superusuario postgres para no pisar su contraseña al restaurar.
+GLOBALS_FILE=${LOCAL_DIR}/pg_globals-${FECHA}.sql.gz
+log ">> Volcando usuarios (roles) a ${GLOBALS_FILE}"
+docker compose exec -T "${SERVICE_NAME}" \
+    pg_dumpall -U postgres --globals-only \
+    2>>"${LOG_FILE}" | grep -v -E '^(CREATE|ALTER) ROLE postgres( |;)' | gzip >"${GLOBALS_FILE}"
+if [ $? -ne 0 ]; then
+    log "STATUS: ERROR al volcar los usuarios"
+    rm -f "${GLOBALS_FILE}"
+    ERRORES=$((ERRORES + 1))
+else
+    log "STATUS: OK"
+
+    S3_URI=s3://${S3_BUCKET}/${S3_PREFIX}/pg_globals/pg_globals-${FECHA}.sql.gz
+    log ">> Subiendo ${GLOBALS_FILE} a ${S3_URI} (${S3_STORAGE_CLASS})"
+    if aws s3 cp "${GLOBALS_FILE}" "${S3_URI}" --storage-class "${S3_STORAGE_CLASS}" --only-show-errors 2>>"${LOG_FILE}"; then
+        log "STATUS: OK"
+        rm -f "${GLOBALS_FILE}"
+    else
+        log "STATUS: ERROR al subir los usuarios, el backup queda en ${GLOBALS_FILE}"
+        ERRORES=$((ERRORES + 1))
+    fi
+fi
+
+if [ ${ERRORES} -ne 0 ]; then
+    log "STATUS: ERROR - ${ERRORES} base(s) de datos no se pudieron respaldar"
+    log "STATUS: BACKUP INCOMPLETO"
+    log "------------------------------------"
+    exit 1
+fi
+log "STATUS: BACKUP FINALIZADO CORRECTAMENTE"
+log "------------------------------------"
+exit 0
