@@ -107,19 +107,16 @@ Desde la aplicación (o desde el host) los datos de conexión quedan:
 
 > Las contraseñas usan `scram-sha-256` (el soporte de `md5` está deprecado desde PostgreSQL 18). Si una aplicación no conecta, verificar que su driver/cliente PostgreSQL esté actualizado.
 
-## Listar bases de datos
+## Ver bases de datos, usuarios y permisos
 
 ```sql
-postgres=# \l
+postgres=# \l                 -- bases de datos (con dueño y permisos de acceso)
+postgres=# \du                -- usuarios
+postgres=# \c mi_proyecto_db  -- conectarse a una base para ver sus tablas y permisos
+mi_proyecto_db=# \dp          -- permisos de las tablas
 ```
 
-## Listar usuarios
-
-```sql
-postgres=# \du
-```
-
-_Los roles que empiezan con `pg_` son roles internos de PostgreSQL y no se muestran con `\du`._
+Más consultas (quién se puede conectar a cada base, cómo leer los permisos, tamaños, dar/quitar permisos, conexiones activas, etc.) en **[CHEATSHEET.md](CHEATSHEET.md)**.
 
 ## Resetear o actualizar la contraseña de un usuario
 
